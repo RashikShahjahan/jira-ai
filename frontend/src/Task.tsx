@@ -4,8 +4,8 @@ export interface TaskData {
   id: string;
   title: string;
   description: string;
-  status: string;
-  priority: string;
+  status: "Pending" | "In Progress" | "Completed" | "Archived";
+  priority: "LOW" | "MEDIUM" | "HIGH";
 }
 
 interface TaskProps extends TaskData {
@@ -50,9 +50,10 @@ function Task({ id, title, description, status, priority, onUpdate }: TaskProps)
               onChange={(e) => setEditedStatus(e.target.value)}
               className="p-2 border rounded"
             >
-              <option value="TODO">Todo</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="DONE">Done</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="Archived">Archived</option>
             </select>
             <select
               value={editedPriority}
