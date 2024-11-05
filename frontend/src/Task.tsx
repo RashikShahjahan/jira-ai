@@ -1,48 +1,102 @@
-export type TaskData = {
-    id: string;
-    title: string;
-    description: string;
-    status: "Pending" | "In Progress" | "Completed" | "Archived";
-    priority: "LOW" | "MEDIUM" | "HIGH";
+import { useState } from 'react';
+
+export interface TaskData {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
 }
 
-function Task({ title, description, status, priority }: TaskData) {
-    const getPriorityColor = (priority: string) => {
-        switch (priority) {
-            case "HIGH": return "bg-red-100 text-red-800";
-            case "MEDIUM": return "bg-yellow-100 text-yellow-800";
-            case "LOW": return "bg-green-100 text-green-800";
-            default: return "bg-gray-100 text-gray-800";
-        }
-    };
+interface TaskProps extends TaskData {
+  onUpdate: (taskId: string, updatedData: Partial<TaskData>) => void;
+}
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "Completed": return "bg-green-100 text-green-800";
-            case "In Progress": return "bg-blue-100 text-blue-800";
-            case "Archived": return "bg-gray-100 text-gray-800";
-            default: return "bg-yellow-100 text-yellow-800";
-        }
-    };
+function Task({ id, title, description, status, priority, onUpdate }: TaskProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(title);
+  const [editedDescription, setEditedDescription] = useState(description);
+  const [editedStatus, setEditedStatus] = useState(status);
+  const [editedPriority, setEditedPriority] = useState(priority);
 
-    return (
-        <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md border border-gray-200">
-            <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
-                <span className={`px-2 py-1 rounded-full text-sm font-medium ${getPriorityColor(priority)}`}>
-                    {priority}
-                </span>
-            </div>
-            
-            <p className="text-gray-600 mb-4 whitespace-pre-wrap">{description}</p>
-            
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(status)}`}>
-                    {status}
-                </span>
-            </div>
-        </div>
-    );
+  const handleSave = () => {
+    onUpdate(id, {
+      title: editedTitle,
+      description: editedDescription,
+      status: editedStatus,
+      priority: editedPriority,
+    });
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="border p-4 mb-4 rounded-lg">
+      {isEditing ? (
+        <>
+          <input
+            type="text"
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+            className="w-full mb-2 p-2 border rounded"
+          />
+          <textarea
+            value={editedDescription}
+            onChange={(e) => setEditedDescription(e.target.value)}
+            className="w-full mb-2 p-2 border rounded"
+          />
+          <div className="flex gap-4 mb-2">
+            <select
+              value={editedStatus}
+              onChange={(e) => setEditedStatus(e.target.value)}
+              className="p-2 border rounded"
+            >
+              <option value="TODO">Todo</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="DONE">Done</option>
+            </select>
+            <select
+              value={editedPriority}
+              onChange={(e) => setEditedPriority(e.target.value)}
+              className="p-2 border rounded"
+            >
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              className="px-3 py-1 bg-green-500 text-white rounded"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className="px-3 py-1 bg-gray-500 text-white rounded"
+            >
+              Cancel
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 className="text-xl font-bold">{title}</h2>
+          <p className="text-gray-600">{description}</p>
+          <div className="mt-2">
+            <span className="mr-2">Status: {status}</span>
+            <span>Priority: {priority}</span>
+          </div>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="mt-2 px-3 py-1 bg-blue-500 text-white rounded"
+          >
+            Edit
+          </button>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default Task
