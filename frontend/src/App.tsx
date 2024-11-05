@@ -4,11 +4,13 @@ import { z } from "zod";
 import Task, { TaskData } from "./Task";
 
 // Zod schemas
-const PriorityEnum = z.enum(["HIGH", "MEDIUM", "LOW"]);
+const PriorityEnum = z.enum(["LOW", "MEDIUM", "HIGH"]);
+const StatusEnum = z.enum(["Pending", "In Progress", "Completed", "Archived"]);
 const ExtractedTaskSchema = z.object({
     title: z.string(),
     description: z.string(),
     priority: PriorityEnum,
+    status: StatusEnum.optional().default("Pending"),
 });
 const TaskResponseSchema = z.object({
     tasks: z.array(ExtractedTaskSchema),
@@ -34,7 +36,6 @@ function App() {
         setTasks(prevTasks => [...prevTasks, ...parsedResponse.tasks.map(task => ({
           ...task,
           id: crypto.randomUUID(),
-          status: 'TODO'
         }))]);
 
         // Create message for chat
@@ -50,13 +51,27 @@ function App() {
     }
   };
 
+  const handleUpdateTask = (taskId: string, updatedData: Partial<TaskData>) => {
+    setTasks(prevTasks => prevTasks.map(task => 
+      task.id === taskId ? { ...task, ...updatedData } : task
+    ));
+  };
+
   return (
     <div className="flex w-full h-screen">
       <div className="flex flex-col w-1/2 h-screen p-4 border-r">
         <h1 className="text-2xl font-bold mb-4">Task Manager</h1>
         <div className="flex-grow overflow-y-auto">
           {tasks.map((task) => (
-            <Task key={task.id} title={task.title} description={task.description} status={task.status} priority={task.priority} />
+            <Task 
+              key={task.id} 
+              id={task.id}
+              title={task.title} 
+              description={task.description} 
+              status={task.status} 
+              priority={task.priority}
+              onUpdate={handleUpdateTask}
+            />
           ))}
         </div>
       </div>
