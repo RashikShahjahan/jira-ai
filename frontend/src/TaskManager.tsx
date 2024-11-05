@@ -3,7 +3,7 @@ import Task, { TaskData } from "./Task";
 
 function TaskManager() {
     const [tasks, setTasks] = useState<TaskData[]>([
-        { id: "1", title: "Task 1", description: "Description of task 1 jkj", status: "Pending", priority: "Low" },
+        { id: "1", title: "Task 1", description: "Description 1", status: "Pending", priority: "Low" },
         { id: "2", title: "Task 2", description: "Description 2", status: "In Progress", priority: "Medium" },
         { id: "3", title: "Task 3", description: "Description 3", status: "Completed", priority: "High" },
     ]);
