@@ -4,11 +4,13 @@ import { z } from "zod";
 import Task, { TaskData } from "./Task";
 
 // Zod schemas
-const PriorityEnum = z.enum(["HIGH", "MEDIUM", "LOW"]);
+const PriorityEnum = z.enum(["LOW", "MEDIUM", "HIGH"]);
+const StatusEnum = z.enum(["Pending", "In Progress", "Completed", "Archived"]);
 const ExtractedTaskSchema = z.object({
     title: z.string(),
     description: z.string(),
     priority: PriorityEnum,
+    status: StatusEnum.optional().default("Pending"),
 });
 const TaskResponseSchema = z.object({
     tasks: z.array(ExtractedTaskSchema),
@@ -34,7 +36,6 @@ function App() {
         setTasks(prevTasks => [...prevTasks, ...parsedResponse.tasks.map(task => ({
           ...task,
           id: crypto.randomUUID(),
-          status: 'TODO'
         }))]);
 
         // Create message for chat
