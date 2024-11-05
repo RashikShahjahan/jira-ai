@@ -1,8 +1,11 @@
 import TaskManager from "./TaskManager"
-
+import Chatbox from "./Chatbox"
 function App() {
   return (
-    <TaskManager />
+    <div className="flex w-full h-screen">
+      <TaskManager />
+      <Chatbox />
+    </div>
   )
 }
 
