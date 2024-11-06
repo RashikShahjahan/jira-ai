@@ -40,8 +40,8 @@ function App() {
 
         const epicsMessage = parsedResponse.epics
           .map(epic => (
-            `📊 Epic: ${epic.title}\n` +
-            `📝 ${epic.description}\n` +
+            `Epic: ${epic.title}\n` +
+            `Description: ${epic.description}\n` +
             `Tasks:\n` +
             epic.tasks.map(task => (
               `  • ${task.title} (${task.priority})\n` +
@@ -56,36 +56,18 @@ function App() {
 
   const handleUpdateEpic = (epicId: string, updatedData: Partial<z.infer<typeof EpicSchema>>) => {
     setEpics(prevEpics => prevEpics.map(epic => 
-      epic.id === epicId ? { ...epic, ...updatedData } : epic
-    ));
-  };
-
-  const handleAddTask = (epicId: string) => {
-    const newTask = {
-      id: crypto.randomUUID(),
-      title: "New Task",
-      description: "Task description",
-      priority: "MEDIUM" as const,
-      status: "Pending" as const
-    };
-
-    setEpics(prevEpics => prevEpics.map(epic =>
-      epic.id === epicId
-        ? { ...epic, tasks: [...epic.tasks, newTask] }
-        : epic
+      epic.id === epicId ? Epic.update(epic, updatedData) : epic
     ));
   };
 
   const toggleEpic = (epicId: string) => {
-    setExpandedEpics(prev => {
-      const next = new Set(prev);
-      if (next.has(epicId)) {
-        next.delete(epicId);
-      } else {
-        next.add(epicId);
-      }
-      return next;
-    });
+    setExpandedEpics(prev => Epic.toggle(prev, epicId));
+  };
+
+  const handleSaveEpic = async (epicId: string) => {
+    const epic = epics.find(e => e.id === epicId);
+    if (!epic) return;
+    console.log('Saving epic:', epic);
   };
 
   return (
@@ -98,7 +80,7 @@ function App() {
               key={epic.id}
               epic={epic}
               onUpdate={handleUpdateEpic}
-              onAddTask={handleAddTask}
+              onSave={handleSaveEpic}
               isExpanded={expandedEpics.has(epic.id)}
               onToggle={() => toggleEpic(epic.id)}
             />
