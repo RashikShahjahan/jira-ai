@@ -12,12 +12,16 @@ const TaskSchema = z.object({
     priority: PriorityEnum,
     status: StatusEnum.optional().default("Pending"),
 });
+
+
 const EpicSchema = z.object({
     title: z.string(),
     description: z.string(),
     tasks: z.array(TaskSchema),
     status: StatusEnum.optional().default("Pending"),
 });
+
+
 const EpicResponseSchema = z.object({
     epics: z.array(EpicSchema),
 });
@@ -75,6 +79,22 @@ function App() {
     ));
   };
 
+  const handleAddTask = (epicId: string) => {
+    const newTask = {
+      id: crypto.randomUUID(),
+      title: "New Task",
+      description: "Task description",
+      priority: "MEDIUM" as const,
+      status: "Pending" as const
+    };
+
+    setEpics(prevEpics => prevEpics.map(epic =>
+      epic.id === epicId
+        ? { ...epic, tasks: [...epic.tasks, newTask] }
+        : epic
+    ));
+  };
+
   return (
     <div className="flex w-full h-screen">
       <div className="flex flex-col w-1/2 h-screen p-4 border-r">
@@ -82,8 +102,16 @@ function App() {
         <div className="flex-grow overflow-y-auto">
           {epics.map((epic) => (
             <div key={epic.id} className="mb-6 p-4 border rounded-lg">
-              <h2 className="text-xl font-bold mb-2">{epic.title}</h2>
-              <p className="mb-4 text-gray-600">{epic.description}</p>
+              <input
+                className="text-xl font-bold mb-2 w-full border-b border-transparent hover:border-gray-300 focus:border-gray-300 focus:outline-none"
+                value={epic.title}
+                onChange={(e) => handleUpdateEpic(epic.id, { title: e.target.value })}
+              />
+              <textarea
+                className="mb-4 text-gray-600 w-full border-b border-transparent hover:border-gray-300 focus:border-gray-300 focus:outline-none"
+                value={epic.description}
+                onChange={(e) => handleUpdateEpic(epic.id, { description: e.target.value })}
+              />
               <div className="space-y-2">
                 {epic.tasks.map((task) => (
                   <Task 
@@ -98,6 +126,12 @@ function App() {
                     }}
                   />
                 ))}
+                <button
+                  onClick={() => handleAddTask(epic.id)}
+                  className="w-full p-2 mt-2 text-gray-600 border border-dashed rounded-lg hover:bg-gray-50"
+                >
+                  + Add Task
+                </button>
               </div>
             </div>
           ))}
