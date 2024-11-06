@@ -70,6 +70,10 @@ function App() {
     console.log('Saving epic:', epic);
   };
 
+  const handleDeleteEpic = (epicId: string) => {
+    setEpics(prevEpics => prevEpics.filter(epic => epic.id !== epicId));
+  };
+
   return (
     <div className="flex w-full h-screen">
       <div className="flex flex-col w-1/2 h-screen p-4 border-r">
@@ -81,6 +85,7 @@ function App() {
               epic={epic}
               onUpdate={handleUpdateEpic}
               onSave={handleSaveEpic}
+              onDelete={() => handleDeleteEpic(epic.id)}
               isExpanded={expandedEpics.has(epic.id)}
               onToggle={() => toggleEpic(epic.id)}
             />
