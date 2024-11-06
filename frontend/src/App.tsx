@@ -1,30 +1,10 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { z } from "zod";
-import Task from "./Task";
-
-// Updated Zod schemas
-const PriorityEnum = z.enum(["LOW", "MEDIUM", "HIGH"]);
-const StatusEnum = z.enum(["Pending", "In Progress", "Completed", "Archived"]);
-const TaskSchema = z.object({
-    title: z.string(),
-    description: z.string(),
-    priority: PriorityEnum,
-    status: StatusEnum.optional().default("Pending"),
-});
+import Epic from "./Epic";
+import { EpicSchema, EpicResponseSchema } from './schemas';
 
 
-const EpicSchema = z.object({
-    title: z.string(),
-    description: z.string(),
-    tasks: z.array(TaskSchema),
-    status: StatusEnum.optional().default("Pending"),
-});
-
-
-const EpicResponseSchema = z.object({
-    epics: z.array(EpicSchema),
-});
 
 function App() {
   const [epics, setEpics] = useState<(z.infer<typeof EpicSchema> & { id: string })[]>([]);
@@ -114,49 +94,14 @@ function App() {
         <h1 className="text-2xl font-bold mb-4">Epic Manager</h1>
         <div className="flex-grow overflow-y-auto">
           {epics.map((epic) => (
-            <div key={epic.id} className="mb-6 p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <input
-                  className="text-xl font-bold w-full border-b border-transparent hover:border-gray-300 focus:border-gray-300 focus:outline-none"
-                  value={epic.title}
-                  onChange={(e) => handleUpdateEpic(epic.id, { title: e.target.value })}
-                />
-                <button
-                  onClick={() => toggleEpic(epic.id)}
-                  className="ml-2 p-1 hover:bg-gray-100 rounded"
-                >
-                  {expandedEpics.has(epic.id) ? '▼' : '▶'}
-                </button>
-              </div>
-              <textarea
-                className="mb-4 text-gray-600 w-full border-b border-transparent hover:border-gray-300 focus:border-gray-300 focus:outline-none"
-                value={epic.description}
-                onChange={(e) => handleUpdateEpic(epic.id, { description: e.target.value })}
-              />
-              {expandedEpics.has(epic.id) && (
-                <div className="space-y-2">
-                  {epic.tasks.map((task) => (
-                    <Task 
-                      key={task.id} 
-                      {...task}
-                      onUpdate={(taskId, updates) => {
-                        handleUpdateEpic(epic.id, {
-                          tasks: epic.tasks.map(t => 
-                            t.id === taskId ? { ...t, ...updates } : t
-                          )
-                        });
-                      }}
-                    />
-                  ))}
-                  <button
-                    onClick={() => handleAddTask(epic.id)}
-                    className="w-full p-2 mt-2 text-gray-600 border border-dashed rounded-lg hover:bg-gray-50"
-                  >
-                    + Add Task
-                  </button>
-                </div>
-              )}
-            </div>
+            <Epic
+              key={epic.id}
+              epic={epic}
+              onUpdate={handleUpdateEpic}
+              onAddTask={handleAddTask}
+              isExpanded={expandedEpics.has(epic.id)}
+              onToggle={() => toggleEpic(epic.id)}
+            />
           ))}
         </div>
       </div>
