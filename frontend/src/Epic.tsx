@@ -1,5 +1,5 @@
 import { z } from "zod";
-import Task from "./Task";
+import Task, { TaskData } from "./Task";
 import { EpicSchema} from './schemas';
 import { useState } from "react";
 
@@ -47,26 +47,37 @@ Epic.toggle = (expandedEpics: Set<string>, epicId: string): Set<string> => {
 };
 
 function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle, onDeleteTask }: EpicProps) {
-  const [isEdited, setIsEdited] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [editState, setEditState] = useState({
+    isEditing: false,
+    isEdited: false,
+    isSaving: false,
+    editedTitle: epic.title,
+    editedDescription: epic.description
+  });
 
-  const handleUpdate = (updates: Partial<z.infer<typeof EpicSchema>>) => {
-    setIsEdited(true);
-    onUpdate(epic.id, updates);
-  };
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   const handleSave = async () => {
-    if (onSave) {
-      setIsSaving(true);
-      try {
-        await onSave(epic.id);
-        setIsEdited(false);
-        setIsEditing(false);
-      } finally {
-        setIsSaving(false);
-      }
+    if (!onSave) return;
+    
+    setEditState(prev => ({ ...prev, isSaving: true }));
+    try {
+      await onSave(epic.id);
+      setEditState(prev => ({ 
+        ...prev, 
+        isEditing: false, 
+        isEdited: false, 
+        isSaving: false 
+      }));
+    } finally {
+      setEditState(prev => ({ ...prev, isSaving: false }));
     }
+  };
+
+  const handleTaskUpdate = (taskId: string, updates: Partial<TaskData>) => {
+    onUpdate(epic.id, {
+      tasks: epic.tasks.map(t => t.id === taskId ? { ...t, ...updates } : t)
+    });
   };
 
   const handleAddTask = () => {
@@ -75,14 +86,26 @@ function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle, onDelete
     });
   };
 
+  const handleDone = () => {
+    onUpdate(epic.id, {
+      title: editState.editedTitle,
+      description: editState.editedDescription
+    });
+    setEditState(prev => ({ 
+      ...prev, 
+      isEditing: false, 
+      isEdited: false 
+    }));
+  };
+
   return (
     <div className="mb-6 p-4 border rounded-lg">
       <div className="flex items-center justify-between mb-2">
-        {isEditing ? (
+        {editState.isEditing ? (
           <input
             className="text-xl font-bold w-full border-b border-gray-300 focus:outline-none"
-            value={epic.title}
-            onChange={(e) => handleUpdate({ title: e.target.value })}
+            value={editState.editedTitle}
+            onChange={(e) => setEditState({ ...editState, editedTitle: e.target.value })}
             autoFocus
           />
         ) : (
@@ -91,10 +114,10 @@ function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle, onDelete
           </div>
         )}
         <div className="flex items-center gap-2">
-          {!isEditing && (
+          {!editState.isEditing && (
             <>
               <button
-                onClick={() => setIsEditing(true)}
+                onClick={() => setEditState({ ...editState, isEditing: true })}
                 className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
               >
                 Edit
@@ -107,25 +130,28 @@ function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle, onDelete
               </button>
             </>
           )}
-          {isEdited && (
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
-            >
-              {isSaving ? 'Saving...' : 'Save'}
-            </button>
-          )}
-          {isEditing && (
-            <button
-              onClick={() => {
-                setIsEditing(false);
-                setIsEdited(false);
-              }}
-              className="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-            >
-              Cancel
-            </button>
+          {editState.isEditing && (
+            <>
+              <button
+                onClick={handleDone}
+                className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                Done
+              </button>
+              <button
+                onClick={() => {
+                  setEditState({ 
+                    ...editState, 
+                    isEditing: false, 
+                    editedTitle: epic.title,
+                    editedDescription: epic.description 
+                  });
+                }}
+                className="px-3 py-1 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </>
           )}
           <button
             onClick={onToggle}
@@ -135,11 +161,11 @@ function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle, onDelete
           </button>
         </div>
       </div>
-      {isEditing ? (
+      {editState.isEditing ? (
         <textarea
           className="mb-4 text-gray-600 w-full border rounded p-2 focus:outline-none"
-          value={epic.description}
-          onChange={(e) => handleUpdate({ description: e.target.value })}
+          value={editState.editedDescription}
+          onChange={(e) => setEditState({ ...editState, editedDescription: e.target.value })}
           rows={3}
         />
       ) : (
@@ -153,14 +179,12 @@ function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle, onDelete
             <Task 
               key={task.id} 
               {...task}
-              onUpdate={(taskId, updates) => {
-                onUpdate(epic.id, {
-                  tasks: epic.tasks.map(t => 
-                    t.id === taskId ? { ...t, ...updates } : t
-                  )
-                });
-              }}
+              onUpdate={(taskId, updates) => handleTaskUpdate(taskId, updates)}
               onDelete={() => onDeleteTask(task.id)}
+              isEditing={editingTaskId === task.id}
+              onEditToggle={() => setEditingTaskId(
+                editingTaskId === task.id ? null : task.id
+              )}
             />
           ))}
           <button
