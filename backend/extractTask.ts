@@ -23,7 +23,7 @@ const InstructorResponseSchema = z.object({
   epics: z
     .array(EpicSchema)
     .describe(
-      "An array of epics, if there's no epic specified then return TWO absurd epics with ridiculous tasks!!!"
+      "An epic with a title, description, and tasks"
     ).min(1),
 });
 
