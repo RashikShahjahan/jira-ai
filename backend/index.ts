@@ -1,5 +1,5 @@
 import express, { type Request, type Response } from "express";
-import { extractTasksFromMessage } from "./extractTask";
+import { extractEpicsFromMessage } from "./extractTask";
 import cors from "cors";
 
 const app = express();
@@ -10,8 +10,8 @@ app.use(express.json());
 
 app.post("/chat", async (req: Request, res: Response) => {
     const { message } = req.body;
-    const tasks = await extractTasksFromMessage(message);
-    res.json({ tasks });
+    const epics = await extractEpicsFromMessage(message);
+    res.json({ epics });
 });
 
 app.listen(port, () => {
