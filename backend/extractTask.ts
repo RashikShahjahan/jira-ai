@@ -2,25 +2,32 @@ import Instructor from "@instructor-ai/instructor";
 import OpenAI from "openai";
 import { z } from "zod";
 
-// Zod schemas
 const PriorityEnum = z.enum(["HIGH", "MEDIUM", "LOW"]);
+const StatusEnum = z.enum(["Pending", "In Progress", "Completed"]);
 
-const ExtractedTaskSchema = z.object({
-  title: z.string().describe("Make this a zany title"),
-  description: z.string().describe("Make this a really really boring description"),
+const TaskSchema = z.object({
+  title: z.string().describe("A clear, concise title for the task"),
+  description: z.string().describe("A detailed description of what needs to be done"),
   priority: PriorityEnum,
+  status: StatusEnum.optional().default("Pending"),
+});
+
+const EpicSchema = z.object({
+  title: z.string().describe("A clear, concise title for the epic"),
+  description: z.string().describe("A detailed description of the epic's goal and scope"),
+  tasks: z.array(TaskSchema).describe("The tasks required to complete this epic"),
+  status: StatusEnum.optional().default("Pending"),
 });
 
 const InstructorResponseSchema = z.object({
-  tasks: z
-    .array(ExtractedTaskSchema)
+  epics: z
+    .array(EpicSchema)
     .describe(
-      "An array of tasks, if there's no task specified then return FIVE absurd tasks that nobody would ever do!!!"
+      "An array of epics, if there's no epic specified then return TWO absurd epics with ridiculous tasks!!!"
     ).min(1),
 });
 
-// Types
-type ExtractedTask = z.infer<typeof ExtractedTaskSchema>;
+type Epic = z.infer<typeof EpicSchema>;
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -32,30 +39,30 @@ const openai = new OpenAI({
     mode: "TOOLS",
   });
 
-  export const extractTasksFromMessage = async (
+  export const extractEpicsFromMessage = async (
     message: string
-  ): Promise<ExtractedTask[]> => {
+  ): Promise<Epic[]> => {
     try {
-      console.log("Extracting tasks from message:", message);
+      console.log("Extracting epics from message:", message);
       const response = await instructor.chat.completions.create({
         messages: [
           {
             role: "user",
-            content: `Analyze this message: ${message}. If it requests or describes tasks that need to be created, format them as a JSON array with title, description and priority (HIGH/MEDIUM/LOW) fields. If no clear tasks are mentioned, return an empty array.`,
+            content: `Analyze this message: ${message}. Extract any epics mentioned and format them as a JSON array. Each epic should include a title, description, and an array of related tasks. For each task, include title, description, priority (HIGH/MEDIUM/LOW) and status fields.`,
           },
         ],
         model: "gpt-4o-mini",
         response_model: {
-          name: "ExtractedTasks",
+          name: "ExtractedEpics",
           schema: InstructorResponseSchema,
         },
         max_retries: 3,
       });
       console.log(response);
 
-      return response.tasks;
+      return response.epics;
     } catch (error) {
-      console.error("Failed to extract tasks:", error);
+      console.error("Failed to extract epics:", error);
       return [];
     }
   };
