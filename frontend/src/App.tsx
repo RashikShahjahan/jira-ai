@@ -74,6 +74,14 @@ function App() {
     setEpics(prevEpics => prevEpics.filter(epic => epic.id !== epicId));
   };
 
+  const handleDeleteTask = (epicId: string, taskId: string) => {
+    setEpics(prevEpics => prevEpics.map(epic => 
+      epic.id === epicId 
+        ? { ...epic, tasks: epic.tasks.filter(task => task.id !== taskId) }
+        : epic
+    ));
+  };
+
   return (
     <div className="flex w-full h-screen">
       <div className="flex flex-col w-1/2 h-screen p-4 border-r">
@@ -88,6 +96,7 @@ function App() {
               onDelete={() => handleDeleteEpic(epic.id)}
               isExpanded={expandedEpics.has(epic.id)}
               onToggle={() => toggleEpic(epic.id)}
+              onDeleteTask={(taskId) => handleDeleteTask(epic.id, taskId)}
             />
           ))}
         </div>

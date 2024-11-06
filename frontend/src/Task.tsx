@@ -10,9 +10,10 @@ export interface TaskData {
 
 interface TaskProps extends TaskData {
   onUpdate: (taskId: string, updatedData: Partial<TaskData>) => void;
+  onDelete: () => void;
 }
 
-function Task({ id, title, description, status, priority, onUpdate }: TaskProps) {
+function Task({ id, title, description, status, priority, onUpdate, onDelete }: TaskProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
   const [editedDescription, setEditedDescription] = useState(description);
@@ -88,12 +89,20 @@ function Task({ id, title, description, status, priority, onUpdate }: TaskProps)
             <span className="mr-2">Status: {status}</span>
             <span>Priority: {priority}</span>
           </div>
-          <button
-            onClick={() => setIsEditing(true)}
-            className="mt-2 px-3 py-1 bg-blue-500 text-white rounded"
-          >
-            Edit
-          </button>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-3 py-1 bg-blue-500 text-white rounded"
+            >
+              Edit
+            </button>
+            <button
+              onClick={onDelete}
+              className="px-3 py-1 bg-red-500 text-white rounded"
+            >
+              Delete
+            </button>
+          </div>
         </>
       )}
     </div>

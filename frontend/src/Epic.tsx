@@ -10,6 +10,7 @@ interface EpicProps {
   onDelete: (epicId: string) => void;
   isExpanded: boolean;
   onToggle: () => void;
+  onDeleteTask: (taskId: string) => void;
 }
 
 // New static methods
@@ -45,7 +46,7 @@ Epic.toggle = (expandedEpics: Set<string>, epicId: string): Set<string> => {
   return next;
 };
 
-function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle }: EpicProps) {
+function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle, onDeleteTask }: EpicProps) {
   const [isEdited, setIsEdited] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -159,6 +160,7 @@ function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle }: EpicPr
                   )
                 });
               }}
+              onDelete={() => onDeleteTask(task.id)}
             />
           ))}
           <button
