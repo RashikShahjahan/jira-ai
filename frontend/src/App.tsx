@@ -30,6 +30,7 @@ function App() {
   const [epics, setEpics] = useState<(z.infer<typeof EpicSchema> & { id: string })[]>([]);
   const [messages, setMessages] = useState<Array<{ text: string, sender: 'user' | 'ai' }>>([]);
   const [inputText, setInputText] = useState('');
+  const [expandedEpics, setExpandedEpics] = useState<Set<string>>(new Set());
 
   const handleSendMessage = () => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL+"/chat";
@@ -95,6 +96,18 @@ function App() {
     ));
   };
 
+  const toggleEpic = (epicId: string) => {
+    setExpandedEpics(prev => {
+      const next = new Set(prev);
+      if (next.has(epicId)) {
+        next.delete(epicId);
+      } else {
+        next.add(epicId);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="flex w-full h-screen">
       <div className="flex flex-col w-1/2 h-screen p-4 border-r">
@@ -102,37 +115,47 @@ function App() {
         <div className="flex-grow overflow-y-auto">
           {epics.map((epic) => (
             <div key={epic.id} className="mb-6 p-4 border rounded-lg">
-              <input
-                className="text-xl font-bold mb-2 w-full border-b border-transparent hover:border-gray-300 focus:border-gray-300 focus:outline-none"
-                value={epic.title}
-                onChange={(e) => handleUpdateEpic(epic.id, { title: e.target.value })}
-              />
+              <div className="flex items-center justify-between mb-2">
+                <input
+                  className="text-xl font-bold w-full border-b border-transparent hover:border-gray-300 focus:border-gray-300 focus:outline-none"
+                  value={epic.title}
+                  onChange={(e) => handleUpdateEpic(epic.id, { title: e.target.value })}
+                />
+                <button
+                  onClick={() => toggleEpic(epic.id)}
+                  className="ml-2 p-1 hover:bg-gray-100 rounded"
+                >
+                  {expandedEpics.has(epic.id) ? '▼' : '▶'}
+                </button>
+              </div>
               <textarea
                 className="mb-4 text-gray-600 w-full border-b border-transparent hover:border-gray-300 focus:border-gray-300 focus:outline-none"
                 value={epic.description}
                 onChange={(e) => handleUpdateEpic(epic.id, { description: e.target.value })}
               />
-              <div className="space-y-2">
-                {epic.tasks.map((task) => (
-                  <Task 
-                    key={task.id} 
-                    {...task}
-                    onUpdate={(taskId, updates) => {
-                      handleUpdateEpic(epic.id, {
-                        tasks: epic.tasks.map(t => 
-                          t.id === taskId ? { ...t, ...updates } : t
-                        )
-                      });
-                    }}
-                  />
-                ))}
-                <button
-                  onClick={() => handleAddTask(epic.id)}
-                  className="w-full p-2 mt-2 text-gray-600 border border-dashed rounded-lg hover:bg-gray-50"
-                >
-                  + Add Task
-                </button>
-              </div>
+              {expandedEpics.has(epic.id) && (
+                <div className="space-y-2">
+                  {epic.tasks.map((task) => (
+                    <Task 
+                      key={task.id} 
+                      {...task}
+                      onUpdate={(taskId, updates) => {
+                        handleUpdateEpic(epic.id, {
+                          tasks: epic.tasks.map(t => 
+                            t.id === taskId ? { ...t, ...updates } : t
+                          )
+                        });
+                      }}
+                    />
+                  ))}
+                  <button
+                    onClick={() => handleAddTask(epic.id)}
+                    className="w-full p-2 mt-2 text-gray-600 border border-dashed rounded-lg hover:bg-gray-50"
+                  >
+                    + Add Task
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
