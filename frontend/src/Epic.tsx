@@ -7,6 +7,7 @@ interface EpicProps {
   epic: z.infer<typeof EpicSchema> & { id: string };
   onUpdate: (epicId: string, updatedData: Partial<z.infer<typeof EpicSchema>>) => void;
   onSave?: (epicId: string) => Promise<void>;
+  onDelete: (epicId: string) => void;
   isExpanded: boolean;
   onToggle: () => void;
 }
@@ -44,7 +45,7 @@ Epic.toggle = (expandedEpics: Set<string>, epicId: string): Set<string> => {
   return next;
 };
 
-function Epic({ epic, onUpdate, onSave, isExpanded, onToggle }: EpicProps) {
+function Epic({ epic, onUpdate, onSave, onDelete, isExpanded, onToggle }: EpicProps) {
   const [isEdited, setIsEdited] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -90,12 +91,20 @@ function Epic({ epic, onUpdate, onSave, isExpanded, onToggle }: EpicProps) {
         )}
         <div className="flex items-center gap-2">
           {!isEditing && (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Edit
-            </button>
+            <>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => onDelete(epic.id)}
+                className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </>
           )}
           {isEdited && (
             <button
